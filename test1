@@ -1,0 +1,1026 @@
+a!localVariables(
+  local!loggedInUser: loggedInUser(),
+  local!isNotReadOnlyUser: a!refreshVariable(
+    value: not(
+      a!isUserMemberOfGroup(
+        username: local!loggedInUser,
+        groups: cons!CAS_GRP_READ_ONLY
+      )
+    ),
+    refreshAlways: false(),
+    refreshOnReferencedVarChange: false()
+  ),
+  local!refreshMatter: true,
+  /* Defines whether or not to collapse the side nav */
+  local!collapseNav: false,
+  local!complexityData: a!refreshVariable(
+    value: index(
+      a!queryRecordType(
+        fields: {
+          'recordType!{56ee2f81-4f6a-43b9-a131-6680ba562049}CAS Matter Complexity Weighting.relationships.{0fbdf449-8dbd-4143-a2d8-78978b14f7c0}casMatterWeightingCategory2.fields.{71ffa9af-a00b-49be-b1dd-3334482769d8}name',
+          'recordType!{56ee2f81-4f6a-43b9-a131-6680ba562049}CAS Matter Complexity Weighting.relationships.{4a5fe757-3a1f-46a4-b961-ad38249f4c2c}casWeightingLevel2.fields.{b3db84c9-a9e6-4a00-89f3-7e962dd505ad}name'
+        },
+        recordType: 'recordType!{56ee2f81-4f6a-43b9-a131-6680ba562049}CAS Matter Complexity Weighting',
+        filters: {
+          a!queryFilter(
+            field: 'recordType!{56ee2f81-4f6a-43b9-a131-6680ba562049}CAS Matter Complexity Weighting.fields.{9558c707-52ce-44dc-94e3-9b76602e9ccf}matterId',
+            operator: "=",
+            value: ri!matterId
+          ),
+          a!queryFilter(
+            field: 'recordType!{56ee2f81-4f6a-43b9-a131-6680ba562049}CAS Matter Complexity Weighting.fields.{40f767a0-af42-48f1-bc64-71a24b603afd}isActive',
+            operator: "=",
+            value: true
+          )
+        },
+        pagingInfo: a!pagingInfo(
+          startIndex: 1,
+          batchSize: 1,
+          sort: a!sortInfo(
+            field: 'recordType!{56ee2f81-4f6a-43b9-a131-6680ba562049}CAS Matter Complexity Weighting.fields.{9ed19c0e-66a6-43be-91cd-68ec933257c6}createdOn',
+            ascending: false
+          )
+        )
+      ),
+      "data",
+      null
+    ),
+    refreshAfter: "RECORD_ACTION"
+  ),
+  local!workloadData: index(
+    a!queryRecordType(
+      recordType: 'recordType!{f33d072b-17f7-4966-9bcc-44befc55f749}CAS Matter Workload',
+      filters: {
+        a!queryFilter(
+          field: 'recordType!{f33d072b-17f7-4966-9bcc-44befc55f749}CAS Matter Workload.fields.{72fbad6f-a960-4d3f-a6c9-664382d41c53}matterId',
+          operator: "=",
+          value: ri!matterId
+        ),
+        a!queryFilter(
+          field: 'recordType!{f33d072b-17f7-4966-9bcc-44befc55f749}CAS Matter Workload.fields.{22079c3f-71ba-4f90-a51d-6733b556485b}calculatedOnDate',
+          operator: "=",
+          value: rule!CAS_Utils_Today()
+        )
+      },
+      pagingInfo: a!pagingInfo(
+        startIndex: 1,
+        batchSize: 1,
+        sort: a!sortInfo(
+          field: 'recordType!{f33d072b-17f7-4966-9bcc-44befc55f749}CAS Matter Workload.fields.{7fb2a4ff-af07-496a-91a8-5978be16696f}calculatedOn',
+          ascending: false
+        )
+      )
+    ),
+    "data",
+    null
+  ),
+  local!refreshCounter: 1,
+  /* The selected navigation section */
+  local!activeCollapsibleNavSection: 1,
+  local!allLinks: a!refreshVariable(
+    value: cons!CAS_MATTER_USER_GUIDE_LINKS,
+    refreshAlways: false()
+  ),
+  /* The navigation sections */
+  local!matter: a!refreshVariable(
+    value: rule!CAS_getMatterByParams(
+      matterId: ri!matterId,
+      refreshAlways: true
+    ),
+    refreshAfter: "RECORD_ACTION"
+  ),
+  local!swcOfMatter: rule!CAS_getSWCFromMatterForFileCoverPages(matter: local!matter),
+  local!matterAccessType: rule!CAS_getVisibilityTypeForGivenMatter(
+    matterId: ri!matterId,
+    swc: local!swcOfMatter
+  ),
+  local!syncRecord: if(
+    ri!isArchived,
+    rule!CAS_syncAllCaseRecord(matterId: ri!matterId, caseId: ri!caseId),
+    {}
+  ),
+  local!collapsibleNavSections: {
+    a!map(
+      name: "Filecover",
+      icon: "briefcase",
+      itemIndex: 1
+    ),
+    a!map(
+      name: "Subjects",
+      icon: "user",
+      itemIndex: 2
+    ),
+    a!map(name: "Victims", icon: "user", itemIndex: 3),
+    a!map(
+      name: "Witnesses",
+      icon: "user",
+      itemIndex: 4
+    ),
+    a!map(
+      name: "Police O.I.C.",
+      icon: "id-badge-solid",
+      itemIndex: 5
+    ),
+    a!map(
+      name: "Police Witnesses",
+      icon: "id-badge-solid",
+      itemIndex: 6
+    ),
+    a!map(name: "Charges", icon: "list", itemIndex: 7),
+    a!map(
+      name: "Charge Set",
+      icon: "list-alt",
+      itemIndex: 8
+    ),
+    a!map(name: "Bail", icon: "gavel", itemIndex: 9),
+    a!map(
+      name: "Listings",
+      icon: "clipboard-list",
+      itemIndex: 10
+    ),
+    a!map(
+      name: "Tasks",
+      icon: "tasks-alt",
+      itemIndex: 11
+    ),
+    a!map(
+      name: "References",
+      icon: "list-ol",
+      itemIndex: 12
+    ),
+    a!map(
+      name: "Facts & Ante.",
+      icon: "book",
+      itemIndex: 13
+    ),
+    a!map(
+      name: "Criminal History",
+      icon: "archive",
+      itemIndex: 14
+    ),
+    a!map(name: "MDC", icon: "link", itemIndex: 20),
+    a!map(
+      name: "Informers",
+      icon: "user-secret",
+      itemIndex: 15
+    ),
+    a!map(
+      name: "Special Interest",
+      icon: "star",
+      itemIndex: 16
+    ),
+    /*Item for navigation to given section without navigation name*/
+    a!map(name: "", icon: "", itemIndex: 17),
+    a!map(
+      name: "Security",
+      icon: "user-shield",
+      itemIndex: 18,
+      data: a!defaultValue(
+        local!workloadData['recordType!{f33d072b-17f7-4966-9bcc-44befc55f749}CAS Matter Workload.fields.{f0f3c727-9828-485d-b566-50c8448a719a}dynamicSWCWeightingScore'],
+        0
+      )
+    ),
+    a!map(
+      name: "Directions",
+      icon: "directions",
+      itemIndex: 19
+    ),
+    a!map(
+      name: "TimeStamp",
+      icon: "stopwatch",
+      itemIndex: 100
+    ),
+    /*a!map(name: "Hearing", icon: "landmark", data: ""),*/
+    a!map(
+      name: "Complexity",
+      itemIndex: 101,
+      icon: "cogs",
+      data: if(
+        index(
+          local!matter,
+          "workloadRelatedMatterType",
+          null
+        ) = "R",
+        "",
+        local!complexityData['recordType!{56ee2f81-4f6a-43b9-a131-6680ba562049}CAS Matter Complexity Weighting.relationships.{0fbdf449-8dbd-4143-a2d8-78978b14f7c0}casMatterWeightingCategory2.fields.{71ffa9af-a00b-49be-b1dd-3334482769d8}name'] & " "
+      ) & if(
+        a!isNullOrEmpty(
+          index(
+            local!matter,
+            "workloadRelatedMatterType",
+            null
+          )
+        ),
+        "",
+        "(" & index(
+          local!matter,
+          "workloadRelatedMatterType",
+          null
+        ) & ")"
+      )
+    ),
+    a!map(
+      name: "Weighting",
+      icon: "suitcase",
+      itemIndex: 102,
+      data: if(
+        index(
+          local!matter,
+          "workloadRelatedMatterType",
+          null
+        ) = "R",
+        "",
+        local!complexityData['recordType!{56ee2f81-4f6a-43b9-a131-6680ba562049}CAS Matter Complexity Weighting.relationships.{4a5fe757-3a1f-46a4-b961-ad38249f4c2c}casWeightingLevel2.fields.{b3db84c9-a9e6-4a00-89f3-7e962dd505ad}name'] & " "
+      ) & if(
+        a!isNullOrEmpty(
+          index(
+            local!matter,
+            "workloadRelatedMatterType",
+            null
+          )
+        ),
+        "",
+        "(" & index(
+          local!matter,
+          "workloadRelatedMatterType",
+          null
+        ) & ")"
+      )
+    ),
+    a!map(
+      name: "Workload",
+      icon: "id-tag",
+      itemIndex: 103,
+      data: a!defaultValue(
+        local!workloadData['recordType!{f33d072b-17f7-4966-9bcc-44befc55f749}CAS Matter Workload.fields.{f0f3c727-9828-485d-b566-50c8448a719a}dynamicSWCWeightingScore'],
+        0
+      )
+    )
+  },
+  local!actionEvents: rule!CAS_getActionInstanceByParams(
+    caseId: ri!caseId,
+    returnDataSubset: false(),
+    actionId: cons!CAS_INTS_MATTER_BANNER_ACTION_IDS
+  ),
+  local!actions: if(
+    rule!CAS_checkIsNullOrEmpty(
+      value: index(local!actionEvents, "actionId", null())
+    ),
+    {},
+    rule!RCKT_getActionByActionId(actionId: local!actionEvents.actionId)
+  ),
+  local!case: rule!RCKT_getCaseByParams(
+    pagingInfo: a!pagingInfo(1, 1),
+    caseId: ri!caseId,
+    columns: { "statusId", "caseTypeId" },
+    returnDataSubset: false()
+  ),
+  local!caseHistory: rule!CAS_getHistoryRCKTCaseByParams(
+    filters: {
+      a!queryFilter(
+        field: "caseId",
+        operator: "=",
+        value: ri!caseId
+      )
+    },
+    columns: { "previousStatusId" },
+    returnDataSubset: false(),
+    pagingInfo: a!pagingInfo(
+      startIndex: 1,
+      batchSize: 1,
+      sort: a!sortInfo(
+        field: "historyCaseId",
+        ascending: false()
+      )
+    )
+  ),
+  local!showVersionHistoryDisplay: false(),
+  local!selectedURI,
+  local!selectedSubject,
+  local!selectedChargeNumber,
+  local!showWebContent: false(),
+  local!selectedVersionNumber,
+  a!headerContentLayout(
+    header: a!cardLayout(
+      contents: {
+        a!sideBySideLayout(
+          items: {
+            a!sideBySideItem(
+              item: a!buttonArrayLayout(
+                buttons: {
+                  a!buttonWidget_23r3(
+                    label: "Mark as read",
+                    icon: "book-reader",
+                    saveInto: a!writeToDataStoreEntity(
+                      dataStoreEntity: cons!CAS_DSE_MATTER,
+                      valueToStore: a!update(
+                        data: local!matter,
+                        index: "isWasReferralNew",
+                        value: null
+                      ),
+                      onSuccess: {
+                        a!save(
+                          local!matter,
+                          rule!CAS_getMatterByParams(matterId: ri!matterId)
+                        )
+                      }
+                    ),
+                    showWhen: and(
+                      a!isNotNullOrEmpty(local!matter.isWasReferralNew),
+                      local!matter.isWasReferralNew = true(),
+                      ri!openedFromReferral = true(),
+                      local!isNotReadOnlyUser
+                    )
+                  )
+                },
+                align: "START"
+              ),
+              width: "MINIMIZE"
+            ),
+            a!sideBySideItem(
+              item: a!recordActionField_23r3(
+                actions: {
+                  a!recordActionItem(
+                    action: 'recordType!{f91c5da0-378b-4e41-81ac-1de4d223b359}CAS Matter.actions.{9d2bab10-6b56-41fe-ad0b-e50e560a6be8}newEmail',
+                    identifier: ri!matterId
+                  )
+                },
+                align: "END",
+                showWhen: tostring(local!matterAccessType.accessType) = "FULL"
+              )
+            ),
+            a!sideBySideItem(
+              item: a!recordActionField_23r3(
+                actions: {
+                  a!recordActionItem(
+                    action: 'recordType!{f91c5da0-378b-4e41-81ac-1de4d223b359}CAS Matter.actions.{e4c9e40b-3ab2-4bb4-b4be-fe5c77132394}editMatterDetails',
+                    identifier: ri!matterId
+                  ),
+                  a!recordActionItem(
+                    action: 'recordType!{f91c5da0-378b-4e41-81ac-1de4d223b359}CAS Matter.actions.{3604f638-bed1-48be-bf2b-2fb4c99f2695}addEvent',
+                    identifier: ri!matterId
+                  ),
+                  a!recordActionItem(
+                    action: 'recordType!{f91c5da0-378b-4e41-81ac-1de4d223b359}CAS Matter.actions.{6274b2b7-01ff-433f-838e-d7b318139913}ABT',
+                    identifier: ri!matterId
+                  ),
+                  if(
+                    contains(
+                      cons!CAS_INT_MANUAL_WEIGHTING_MATTER_STATES,
+                      index(local!case, "statusId", null)
+                    ),
+                    a!recordActionItem(
+                      action: 'recordType!{f91c5da0-378b-4e41-81ac-1de4d223b359}CAS Matter.actions.{37c2b4c3-e827-4c0d-ab22-3d49fa645e45}editWeightingComplexity',
+                      identifier: ri!matterId
+                    ),
+                    {}
+                  ),
+                  a!recordActionItem(
+                    action: 'recordType!{f91c5da0-378b-4e41-81ac-1de4d223b359}CAS Matter.actions.{c837ec83-9669-4911-a3f3-7e9dcba22bc2}abcTime',
+                    identifier: ri!matterId
+                  ),
+                  a!recordActionItem(
+                    action: 'recordType!{f91c5da0-378b-4e41-81ac-1de4d223b359}CAS Matter.actions.{29002607-8976-4e6f-a6fc-3a949bf0251d}allocatePractice',
+                    identifier: ri!matterId
+                  ),
+                  a!recordActionItem(
+                    action: 'recordType!{f91c5da0-378b-4e41-81ac-1de4d223b359}CAS Matter.actions.{b00d6729-3437-4fe6-be0c-92ec4077e5c7}addNote',
+                    identifier: ri!matterId
+                  ),
+                  a!recordActionItem(
+                    action: 'recordType!{f91c5da0-378b-4e41-81ac-1de4d223b359}CAS Matter.actions.{491bbb44-4a7d-4e4f-b883-53d4ba780f5c}jMatch',
+                    identifier: ri!matterId
+                  ),
+                  a!recordActionItem(
+                    action: 'recordType!{f91c5da0-378b-4e41-81ac-1de4d223b359}CAS Matter.actions.{56c26c19-28fe-4350-9c1e-9a99ec19242c}unexpectedWorkload',
+                    identifier: ri!matterId
+                  ),
+                  a!recordActionItem(
+                    action: 'recordType!{f91c5da0-378b-4e41-81ac-1de4d223b359}CAS Matter.actions.{868ac3c2-9c45-41a6-b26f-a795ba3fb0e9}manageConfiscationsStatus',
+                    identifier: ri!matterId
+                  ),
+                  a!recordActionItem(
+                    action: 'recordType!{f91c5da0-378b-4e41-81ac-1de4d223b359}CAS Matter.actions.{fcb090c4-b5a6-4a67-9a93-22e698803af8}clonemerge',
+                    identifier: ri!matterId
+                  )
+                },
+                style: "MENU",
+                /*MENU TOOLBAR*/
+                align: "END",
+                showWhen: tostring(local!matterAccessType.accessType) = "FULL"
+              ),
+              width: "MINIMIZE"
+            ),
+            a!sideBySideItem(
+              item: a!richTextDisplayField(
+                label: "User Guide Link",
+                labelPosition: "COLLAPSED",
+                value: {
+                  a!richTextItem(text: "  "),
+                  a!richTextIcon(
+                    icon: "question-circle",
+                    caption: "MATTERS User Guide",
+                    link: a!safeLink(
+                      uri: local!allLinks[local!activeCollapsibleNavSection],
+                      openLinkIn: "NEW_TAB"
+                    ),
+                    linkStyle: "STANDALONE"
+                  )
+                },
+                align: "RIGHT"
+              ),
+              width: "MINIMIZE"
+            )
+          },
+          showWhen: and(
+            tostring(local!matterAccessType.accessType) = "FULL",
+            local!isNotReadOnlyUser
+          ),
+          spacing: "DENSE",
+          marginBelow: "NONE"
+        ),
+        if(
+          or(
+            tostring(local!matterAccessType.accessType) = "READ",
+            not(local!isNotReadOnlyUser)
+          ),
+          rule!CAS_ucBannerReadOnlyAccessToMatter(),
+          {}
+        )
+      },
+      /*height: "EXTRA_SHORT",*/
+      style: "STANDARD",
+      padding: "NONE",
+      showBorder: false()
+    ),
+    isHeaderFixed: true,
+    contents: {
+      {
+        if(
+          tostring(local!matterAccessType.accessType) = "BLOCKED",
+          rule!CAS_ucMatterAccessBlockedMessageScreen(
+            matterId: ri!matterId,
+            matter: local!matter
+          ),
+          {
+            if(
+              or(
+                and(
+                  contains(
+                    cons!CAS_INTS_MATTER_BANNER_ACTION_IDS,
+                    index(
+                      local!matter,
+                      "sourceEventResultId",
+                      null()
+                    )
+                  ),
+                  index(local!case, "statusId", null()) = cons!CAS_INT_ADV_STATUS_ID
+                ),
+                and(
+                  tointeger(
+                    index(
+                      local!caseHistory,
+                      "previousStatusId",
+                      null()
+                    )
+                  ) = cons!CAS_INT_ADV_STATUS_ID,
+                  contains(
+                    index(
+                      cons!CAS_INT_CLOSED_MATTER_STATE_IDS,
+                      { 2, 3, 4 },
+                      null()
+                    ),
+                    index(local!case, "statusId", null())
+                  )
+                ),
+                and(
+                  tointeger(
+                    index(local!matter, "sourceVenueId", null())
+                  ) = cons!CAS_INT_LECC_COURT_VENUE_ID,
+                  contains(
+                    index(
+                      cons!CAS_INTS_MATTER_BANNER_ACTION_IDS,
+                      { 3, 4 },
+                      null()
+                    ),
+                    index(
+                      local!matter,
+                      "sourceEventResultId",
+                      null()
+                    )
+                  )
+                )
+              ),
+              a!forEach(
+                items: rule!CAS_removeNullsFromList(
+                  array: union(
+                    touniformstring(
+                      index(local!actions, "warningMessage", {})
+                    ),
+                    touniformstring({})
+                  )
+                ),
+                expression: a!cardLayout(
+                  contents: {
+                    a!sideBySideLayout(
+                      items: {
+                        a!sideBySideItem(
+                          item: a!richTextDisplayField(
+                            labelPosition: "COLLAPSED",
+                            value: {
+                              a!richTextIcon(
+                                icon: "exclamation-circle",
+                                color: "NEGATIVE",
+                                size: "MEDIUM"
+                              )
+                            }
+                          ),
+                          width: "MINIMIZE"
+                        ),
+                        a!sideBySideItem(
+                          item: a!richTextDisplayField(
+                            labelPosition: "COLLAPSED",
+                            value: {
+                              a!richTextItem(
+                                text: { fv!item },
+                                style: "STRONG",
+                                size: "MEDIUM"
+                              ),
+                              " "
+                            }
+                          )
+                        )
+                      },
+                      alignVertical: "MIDDLE",
+                      spacing: "STANDARD"
+                    )
+                  },
+                  showWhen: rule!CAS_checkIsNotNullOrEmpty(fv!item),
+                  style: "#ffa500",
+                  marginBelow: "STANDARD",
+                  accessibilityText: "Error message"
+                )
+              ),
+              {}
+            ),
+            rule!CAS_ucUnconcludedTrialListingsDurationBannerMessageScreen(matterId: ri!matterId),
+            a!columnsLayout(
+              columns: {
+                a!columnLayout(
+                  contents: {
+                    a!forEach(
+                      items: local!collapsibleNavSections,
+                      expression: if(
+                        fv!item.name = "TimeStamp",
+                        {
+                          a!sectionLayout(marginAbove: "EVEN_LESS"),
+                          if(
+                            and(
+                              tostring(local!matterAccessType.accessType) = "FULL",
+                              local!isNotReadOnlyUser
+                            ),
+                            rule!CAS_uiRecordTimeStampFeature(
+                              matterId: ri!matterId,
+                              isCollapsed: local!collapseNav
+                            ),
+                            {}
+                          )
+                        },
+                        if(
+                          contains(
+                            { "Workload", "Complexity", "Weighting" },
+                            fv!item.name
+                          ),
+                          rule!CAS_ucDisplayDurationDataCard(
+                            colour: "NONE",
+                            icon: fv!item.icon,
+                            label: fv!item.name,
+                            data: fv!item.data,
+                            isCollapsed: local!collapseNav
+                          ),
+                          if(
+                            local!collapseNav,
+                            {
+                              a!richTextDisplayField(
+                                value: {
+                                  a!richTextIcon(
+                                    icon: fv!item.icon,
+                                    caption: fv!item.name,
+                                    link: if(
+                                      fv!item.itemIndex = 20,
+                                      a!safeLink(
+                                        label: fv!item.name,
+                                        uri: concat(
+                                          cons!CAS_MATTER_USER_GUIDE_LINKS[15],
+                                          local!matter.matterNumber
+                                        )
+                                      ),
+                                      a!dynamicLink(
+                                        value: fv!index,
+                                        saveInto: {
+                                          local!activeCollapsibleNavSection,
+                                          a!save(
+                                            local!refreshMatter,
+                                            not(local!refreshMatter)
+                                          ),
+                                          a!save(
+                                            local!refreshCounter,
+                                            local!refreshCounter + 1
+                                          ),
+                                          if(
+                                            fv!item.name = "Informers",
+                                            a!startProcess(
+                                              processModel: cons!CAS_PM_USER_AUDIT,
+                                              processParameters: {
+                                                userAudit: 'type!{urn:com:appian:types:CAS}CAS_UserAudit'(
+                                                  username: loggedInUser(),
+                                                  actionDescription: loggedInUser() & " viewed the informers for matter " & index(local!matter, "matterNumber", null),
+                                                  isActive: true,
+                                                  createdBy: "system",
+                                                  createdOn: now()
+                                                )
+                                              }
+                                            ),
+                                            {}
+                                          )
+                                        }
+                                      )
+                                    ),
+                                    linkStyle: "STANDALONE",
+                                    color: if(
+                                      fv!index = local!activeCollapsibleNavSection,
+                                      "ACCENT",
+                                      "SECONDARY"
+                                    ),
+                                    size: "MEDIUM"
+                                  )
+                                },
+                                showWhen: if(
+                                  and(
+                                    not(
+                                      a!isUserMemberOfGroup(
+                                        local!loggedInUser,
+                                        cons!CAS_GROUP_INFORMERS_SECURITY_TEAM
+                                      )
+                                    ),
+                                    not(
+                                      tostring(local!swcOfMatter) = tostring(local!loggedInUser)
+                                    ),
+                                    fv!item.name = "Informers"
+                                  ),
+                                  false,
+                                  true
+                                ),
+                                align: "CENTER",
+                                accessibilityText: if(
+                                  fv!index = local!activeCollapsibleNavSection,
+                                  fv!item.name & " " & "selected",
+                                  ""
+                                )
+                              )
+                            },
+                            a!cardLayout(
+                              contents: {
+                                a!sideBySideLayout(
+                                  items: {
+                                    a!sideBySideItem(
+                                      item: a!richTextDisplayField(
+                                        labelPosition: "COLLAPSED",
+                                        value: a!richTextIcon(
+                                          icon: fv!item.icon,
+                                          color: if(
+                                            fv!index = local!activeCollapsibleNavSection,
+                                            "STANDARD",
+                                            "SECONDARY"
+                                          ),
+                                          size: "MEDIUM"
+                                        ),
+                                        align: "LEFT"
+                                      ),
+                                      width: "MINIMIZE"
+                                    ),
+                                    a!sideBySideItem(
+                                      item: a!richTextDisplayField(
+                                        labelPosition: "COLLAPSED",
+                                        value: a!richTextItem(
+                                          text: fv!item.name,
+                                          color: "ACCENT",
+                                          size: "MEDIUM",
+                                          style: if(
+                                            fv!index = local!activeCollapsibleNavSection,
+                                            "STRONG",
+                                            "PLAIN"
+                                          )
+                                        )
+                                      ),
+                                      showWhen: not(local!collapseNav)
+                                    )
+                                  },
+                                  alignVertical: "MIDDLE"
+                                )
+                              },
+                              link: if(
+                                fv!item.itemIndex = 20,
+                                a!safeLink(
+                                  label: fv!item.name,
+                                  uri: concat(
+                                    cons!CAS_MATTER_USER_GUIDE_LINKS[15],
+                                    local!matter.matterNumber
+                                  )
+                                ),
+                                a!dynamicLink(
+                                  label: fv!item.name,
+                                  value: fv!index,
+                                  saveInto: {
+                                    local!activeCollapsibleNavSection,
+                                    a!save(
+                                      local!refreshMatter,
+                                      not(local!refreshMatter)
+                                    ),
+                                    a!save(
+                                      local!refreshCounter,
+                                      local!refreshCounter + 1
+                                    ),
+                                    if(
+                                      fv!item.name = "Informers",
+                                      a!startProcess(
+                                        processModel: cons!CAS_PM_USER_AUDIT,
+                                        processParameters: {
+                                          userAudit: 'type!{urn:com:appian:types:CAS}CAS_UserAudit'(
+                                            username: local!loggedInUser,
+                                            actionDescription: local!loggedInUser & " viewed the informers for matter " & index(local!matter, "matterNumber", null),
+                                            isActive: true,
+                                            createdBy: "system",
+                                            createdOn: now()
+                                          )
+                                        }
+                                      ),
+                                      {}
+                                    ),
+                                    a!save(
+                                      {
+                                        local!selectedSubject,
+                                        local!selectedChargeNumber,
+                                        local!selectedURI,
+                                        local!selectedVersionNumber
+                                      },
+                                      null
+                                    ),
+                                    a!save(
+                                      {
+                                        local!showVersionHistoryDisplay,
+                                        local!showWebContent
+                                      },
+                                      false
+                                    )
+                                 
+                                  }
+                                )
+                              ),
+                              showWhen: and(
+                                rule!CAS_checkIsNotNullOrEmpty(fv!item.name),
+                                showWhen: if(
+                                  and(
+                                    not(
+                                      a!isUserMemberOfGroup(
+                                        local!loggedInUser,
+                                        cons!CAS_GROUP_INFORMERS_SECURITY_TEAM
+                                      )
+                                    ),
+                                    not(
+                                      tostring(local!swcOfMatter) = tostring(local!loggedInUser)
+                                    ),
+                                    fv!item.name = "Informers"
+                                  ),
+                                  false,
+                                  true
+                                )
+                              ),
+                              style: if(
+                                fv!index = local!activeCollapsibleNavSection,
+                                "ACCENT",
+                                "STANDARD"
+                              ),
+                              shape: "SEMI_ROUNDED",
+                              showBorder: false,
+                              decorativeBarPosition: if(
+                                fv!index = local!activeCollapsibleNavSection,
+                                "START",
+                                "NONE"
+                              ),
+                              decorativeBarColor: cons!CAS_COLOUR_ODPP_TEAL,
+                              accessibilityText: if(
+                                fv!index = local!activeCollapsibleNavSection,
+                                fv!item.name & " " & "selected",
+                                ""
+                              )
+                            )
+                          )
+                        )
+                      )
+                    ),
+                    a!richTextDisplayField(
+                      value: a!richTextIcon(
+                        icon: if(
+                          local!collapseNav,
+                          "angle-double-right",
+                          "angle-double-left"
+                        ),
+                        caption: if(
+                          local!collapseNav,
+                          "Expand navigation bar",
+                          "Collapse navigation bar"
+                        ),
+                        link: a!dynamicLink(
+                          value: not(local!collapseNav),
+                          saveInto: local!collapseNav
+                        ),
+                        linkStyle: "STANDALONE",
+                        color: "SECONDARY",
+                        size: "MEDIUM"
+                      ),
+                      align: "CENTER"
+                    )
+                  },
+                  width: if(
+                    local!collapseNav,
+                    "EXTRA_NARROW",
+                    "NARROW"
+                  )
+                ),
+                a!columnLayout(
+                  contents: {
+                    choose(
+                      local!activeCollapsibleNavSection,
+                      /*File Cover: 1*/
+                      a!sectionLayout(
+                        contents: rule!CAS_ucMatterFileCover(
+                          matterId: ri!matterId,
+                          refreshCounter: local!refreshCounter,
+                          caseId: ri!caseId,
+                          activeCollapsibleNavSection: local!activeCollapsibleNavSection
+                        )
+                      ),
+                      /*subjects: 2*/
+                      a!sectionLayout(
+                        contents: rule!CAS_ucViewParty(
+                          caseId: ri!caseId,
+                          partyRoleTypeId: cons!RCKT_PARTY_INT_PARTY_ROLE_TYPE_SUBJECT_ID,
+                          matterId: ri!matterId,
+                          matterAccessType: local!matterAccessType.accessType
+                        )
+                      ),
+                      /*victims: 3*/
+                      a!sectionLayout(
+                        contents: rule!CAS_ucViewParty(
+                          caseId: ri!caseId,
+                          partyRoleTypeId: cons!RCKT_PARTY_INT_PARTY_ROLE_TYPE_VICTIM_ID,
+                          matterId: ri!matterId,
+                          matterAccessType: local!matterAccessType.accessType
+                        )
+                      ),
+                      /*witnesses: 4*/
+                      a!sectionLayout(
+                        contents: rule!CAS_ucViewParty(
+                          caseId: ri!caseId,
+                          partyRoleTypeId: cons!RCKT_PARTY_INT_PARTY_ROLE_TYPE_CIVILIAN_WITNESS_ID,
+                          matterId: ri!matterId,
+                          matterAccessType: local!matterAccessType.accessType
+                        )
+                      ),
+                      /*police O.I.C.: 5*/
+                      a!sectionLayout(
+                        contents: rule!CAS_ucViewParty(
+                          caseId: ri!caseId,
+                          partyRoleTypeId: cons!RCKT_PARTY_INT_PARTY_ROLE_TYPE_OIC_ID,
+                          matterId: ri!matterId,
+                          matterAccessType: local!matterAccessType.accessType
+                        )
+                      ),
+                      /*police witness: 6*/
+                      a!sectionLayout(
+                        contents: rule!CAS_ucViewParty(
+                          caseId: ri!caseId,
+                          partyRoleTypeId: cons!RCKT_PARTY_INT_PARTY_ROLE_TYPE_POLICE_WITNESS_ID,
+                          matterId: ri!matterId,
+                          matterAccessType: local!matterAccessType.accessType
+                        )
+                      ),
+                      /* Charge:7 */
+                      a!sectionLayout(
+                        contents: rule!CAS_ucMatterChargeDetails(
+                          matterId: ri!matterId,
+                          matterAccessType: local!matterAccessType.accessType
+                        )
+                      ),
+                      /* Charge Set : 8               */
+                      a!sectionLayout(
+                        label: "Charge Set",
+                        contents: {
+                          rule!CAS_uiViewChargeSets(
+                            matterId: ri!matterId,
+                            caseId: ri!caseId,
+                            showRA: local!matterAccessType.accessType = "FULL"
+                          )
+                        }
+                      ),
+                      /*Bail : 9*/
+                      a!sectionLayout(
+                        contents: rule!CAS_ucBailOrdersForMatterFileCover(matterId: ri!matterId)
+                      ),
+                      /*Listings  :10              */
+                      a!sectionLayout(
+                        contents: rule!CAS_ucViewListing(
+                          matterId: ri!matterId,
+                          refreshCounter: local!refreshCounter,
+                          caseId: ri!caseId,
+                          matterAccessType: local!matterAccessType.accessType,
+                          rcktCase: local!case,
+                          matter: local!matter
+                        )
+                      ),
+                      /*Tasks : 11               */
+                      a!sectionLayout(
+                        contents: rule!CAS_uiTasksSummary(
+                          caseId: ri!caseId,
+                          matterId: ri!matterId,
+                          matterAccessType: local!matterAccessType.accessType
+                        )
+                      ),
+                      /*Matter Reference : 12   */
+                      a!sectionLayout(
+                        contents: rule!CAS_ucExternalReferenceSummary(
+                          matterId: ri!matterId,
+                          matterAccessType: local!matterAccessType.accessType
+                        )
+                      ),
+                      /*Facts and Ante. : 13*/
+                      a!sectionLayout(
+                        label: "Facts & Antecedents",
+                        contents: {
+                          rule!CAS_ucFactsAndAntecedentsForMatterFileCover(matterId: ri!matterId)
+                        }
+                      ),
+                      /* Criminal History : 14*/
+                      {
+                        rule!CAS_ucCriminalHistoryInFileCover_v1(
+                          matterId: ri!matterId,
+                          showVersionHistoryDisplay: local!showVersionHistoryDisplay,
+                          selectedURI: local!selectedURI,
+                          selectedSubject: local!selectedSubject,
+                          selectedChargeNumber: local!selectedChargeNumber,
+                          showWebContent: local!showWebContent,
+                          selectedVersionNumber: local!selectedVersionNumber,
+                          matterNumber: index(local!matter, "matterNumber", null),
+                          refreshData: local!refreshCounter
+                        )
+                      },
+                      /*15: MDC*/
+                      {},
+                      /* Informers : 16*/
+                      {
+                        rule!CAS_ucInformersForMatter(matterId: ri!matterId)
+                      },
+                      /* Special Interest : 17*/
+                      {
+                        rule!CAS_uiSpecialInterestRegisterSummary(
+                          matterId: ri!matterId,
+                          matterAccessType: local!matterAccessType.accessType
+                        )
+                      },
+                      /*Prosecution team: 18*/
+                      a!sectionLayout(
+                        contents: rule!CAS_ucMatterProsecutionTeam(
+                          matterId: ri!matterId,
+                          matterAccessType: local!matterAccessType.accessType
+                        )
+                      ),
+                      /*Security: 19*/
+                      a!sectionLayout(
+                        contents: rule!CAS_uiMatterPermissionSummary(
+                          matterId: ri!matterId,
+                          matterAccessType: local!matterAccessType.accessType,
+                          refreshCounter: local!refreshCounter
+                        )
+                      ),
+                      /*Directions: 20*/
+                      a!sectionLayout(
+                        contents: rule!CAS_ucViewDirections(
+                          matterId: ri!matterId,
+                          matterAccessType: local!matterAccessType.accessType
+                        )
+                      )
+                    )
+                  }
+                )
+              },
+              spacing: "SPARSE",
+              showDividers: true
+            )
+          }
+        )
+      }
+    },
+    backgroundColor: "TRANSPARENT"
+  )
+)
