@@ -303,142 +303,529 @@ a!localVariables(
   a!headerContentLayout(
     header: a!cardLayout(
       contents: {
-        a!sideBySideLayout(
-          items: {
-            a!sideBySideItem(
-              item: a!buttonArrayLayout(
-                buttons: {
-                  a!buttonWidget_23r3(
-                    label: "Mark as read",
-                    icon: "book-reader",
-                    saveInto: a!writeToDataStoreEntity(
-                      dataStoreEntity: cons!CAS_DSE_MATTER,
-                      valueToStore: a!update(
-                        data: local!matter,
-                        index: "isWasReferralNew",
-                        value: null
+        /*Adding three buttons in form of card layout, on click opens up external portal*/
+        if(
+          cons!CAS_BOOLEAN_SWITCH_SHOW_PORTAL_BUTTONS,
+          /*If isShowPortalButtons is TRUE, show buttons to all users*/
+          a!columnsLayout(
+            columns: {
+              a!columnLayout(
+                contents: a!cardLayout(
+                  contents: a!columnsLayout(
+                    columns: {
+                      /*DES*/
+                      a!columnLayout(
+                        contents: {
+                          a!cardLayout(
+                            contents: a!richTextDisplayField(
+                              labelPosition: "COLLAPSED",
+                              value: {
+                                a!richTextIcon(
+                                  icon: "globe-alt",
+                                  color: cons!CAS_COLOUR_APPIAN[3],
+                                  size: "STANDARD"
+                                ),
+                                a!richTextItem(
+                                  text: " DES Portal",
+                                  color: cons!CAS_COLOUR_APPIAN[3],
+                                  size: "SMALL"
+                                )
+                              }
+                            ),
+                            link: a!safeLink(
+                              label: "DES Portal",
+                              uri: concat(
+                                cons!CAS_DES_PORTAL_URL,
+                                local!matter.matterNumber
+                              ),
+
+                            ),
+                            tooltip: "Navigates to the DES Portal",
+                            shape: "SEMI_ROUNDED",
+                            padding: "EVEN_LESS"
+                          )
+                        },
+                        width: ""
                       ),
-                      onSuccess: {
-                        a!save(
-                          local!matter,
-                          rule!CAS_getMatterByParams(matterId: ri!matterId)
-                        )
-                      }
+                      /*Sharepoint*/
+                      a!columnLayout(
+                        contents: {
+                          a!cardLayout(
+                            contents: a!richTextDisplayField(
+                              labelPosition: "COLLAPSED",
+                              value: {
+                                a!richTextIcon(
+                                  icon: "link",
+                                  color: cons!CAS_COLOUR_APPIAN[3],
+                                  size: "STANDARD"
+                                ),
+                                a!richTextItem(
+                                  text: " Sharepoint",
+                                  color: cons!CAS_COLOUR_APPIAN[3],
+                                  size: "SMALL"
+                                )
+                              }
+                            ),
+                            link: a!safeLink(
+                              label: "Sharepoint",
+                              uri: concat(
+                                cons!CAS_MATTER_USER_GUIDE_LINKS[15],
+                                local!matter.matterNumber
+                              )
+                            ),
+                            tooltip: "Navigates to the Sharepoint page",
+                            shape: "SEMI_ROUNDED",
+                            padding: "EVEN_LESS"
+                          )
+                        },
+                        width: ""
+                      ),
+                      /*BSP*/
+                      a!columnLayout(
+                        contents: {
+                          a!cardLayout(
+                            contents: a!richTextDisplayField(
+                              labelPosition: "COLLAPSED",
+                              value: {
+                                a!richTextIcon(
+                                  icon: "globe",
+                                  color: cons!CAS_COLOUR_APPIAN[3],
+                                  size: "STANDARD"
+                                ),
+                                a!richTextItem(
+                                  text: " BSP",
+                                  color: cons!CAS_COLOUR_APPIAN[3],
+                                  size: "SMALL"
+                                )
+                              }
+                            ),
+                            link: a!safeLink(
+                              label: "BSP",
+                              uri: cons!CAS_BSP_PORTAL_URL
+                            ),
+                            tooltip: "Navigates to BSP",
+                            shape: "SEMI_ROUNDED",
+                            padding: "EVEN_LESS"
+                          )
+                        },
+                        width: ""
+                      )
+                    },
+                    spacing: "DENSE"
+                  ),
+                  style: cons!CAS_EXTERNAL_PORTAL_BUTTON_BACKGROUND_COLOR,
+                  showBorder: false,
+                  shape: "SEMI_ROUNDED",
+                  padding: "EVEN_LESS"
+                )
+              ),
+              a!columnLayout(contents: {}, width: "2X"),
+              /*Existing Logic*/
+              a!columnLayout(
+                contents: a!sideBySideLayout(
+                  items: {
+                    a!sideBySideItem(
+                      item: a!buttonArrayLayout(
+                        buttons: {
+                          a!buttonWidget_23r3(
+                            label: "Mark as read",
+                            saveInto: a!writeToDataStoreEntity(
+                              dataStoreEntity: cons!CAS_DSE_MATTER,
+                              valueToStore: a!update(
+                                data: local!matter,
+                                index: "isWasReferralNew",
+                                value: null
+                              ),
+                              onSuccess: {
+                                a!save(
+                                  local!matter,
+                                  rule!CAS_getMatterByParams(matterId: ri!matterId)
+                                )
+                              }
+                            ),
+                            showWhen: and(
+                              a!isNotNullOrEmpty(local!matter.isWasReferralNew),
+                              local!matter.isWasReferralNew = true(),
+                              ri!openedFromReferral = true(),
+                              local!isNotReadOnlyUser
+                            ),
+                            icon: "book-reader"
+                          )
+                        },
+                        align: "START"
+                      ),
+                      width: "MINIMIZE"
                     ),
-                    showWhen: and(
-                      a!isNotNullOrEmpty(local!matter.isWasReferralNew),
-                      local!matter.isWasReferralNew = true(),
-                      ri!openedFromReferral = true(),
-                      local!isNotReadOnlyUser
+                    a!sideBySideItem(
+                      item: a!recordActionField_23r3(
+                        actions: {
+                          a!recordActionItem(
+                            action: 'recordType!{f91c5da0-378b-4e41-81ac-1de4d223b359}CAS Matter.actions.{9d2bab10-6b56-41fe-ad0b-e50e560a6be8}newEmail',
+                            identifier: ri!matterId
+                          )
+                        },
+                        align: "END",
+                        showWhen: tostring(local!matterAccessType.accessType) = "FULL"
+                      )
+                    ),
+                    a!sideBySideItem(
+                      item: a!recordActionField_23r3(
+                        actions: {
+                          a!recordActionItem(
+                            action: 'recordType!{f91c5da0-378b-4e41-81ac-1de4d223b359}CAS Matter.actions.{e4c9e40b-3ab2-4bb4-b4be-fe5c77132394}editMatterDetails',
+                            identifier: ri!matterId
+                          ),
+                          a!recordActionItem(
+                            action: 'recordType!{f91c5da0-378b-4e41-81ac-1de4d223b359}CAS Matter.actions.{3604f638-bed1-48be-bf2b-2fb4c99f2695}addEvent',
+                            identifier: ri!matterId
+                          ),
+                          a!recordActionItem(
+                            action: 'recordType!{f91c5da0-378b-4e41-81ac-1de4d223b359}CAS Matter.actions.{6274b2b7-01ff-433f-838e-d7b318139913}ABT',
+                            identifier: ri!matterId
+                          ),
+                          if(
+                            contains(
+                              cons!CAS_INT_MANUAL_WEIGHTING_MATTER_STATES,
+                              index(local!case, "statusId", null)
+                            ),
+                            a!recordActionItem(
+                              action: 'recordType!{f91c5da0-378b-4e41-81ac-1de4d223b359}CAS Matter.actions.{37c2b4c3-e827-4c0d-ab22-3d49fa645e45}editWeightingComplexity',
+                              identifier: ri!matterId
+                            ),
+                            {}
+                          ),
+                          a!recordActionItem(
+                            action: 'recordType!{f91c5da0-378b-4e41-81ac-1de4d223b359}CAS Matter.actions.{c837ec83-9669-4911-a3f3-7e9dcba22bc2}abcTime',
+                            identifier: ri!matterId
+                          ),
+                          a!recordActionItem(
+                            action: 'recordType!{f91c5da0-378b-4e41-81ac-1de4d223b359}CAS Matter.actions.{29002607-8976-4e6f-a6fc-3a949bf0251d}allocatePractice',
+                            identifier: ri!matterId
+                          ),
+                          a!recordActionItem(
+                            action: 'recordType!{f91c5da0-378b-4e41-81ac-1de4d223b359}CAS Matter.actions.{b00d6729-3437-4fe6-be0c-92ec4077e5c7}addNote',
+                            identifier: ri!matterId
+                          ),
+                          a!recordActionItem(
+                            action: 'recordType!{f91c5da0-378b-4e41-81ac-1de4d223b359}CAS Matter.actions.{491bbb44-4a7d-4e4f-b883-53d4ba780f5c}jMatch',
+                            identifier: ri!matterId
+                          ),
+                          a!recordActionItem(
+                            action: 'recordType!{f91c5da0-378b-4e41-81ac-1de4d223b359}CAS Matter.actions.{56c26c19-28fe-4350-9c1e-9a99ec19242c}unexpectedWorkload',
+                            identifier: ri!matterId
+                          ),
+                          a!recordActionItem(
+                            action: 'recordType!{f91c5da0-378b-4e41-81ac-1de4d223b359}CAS Matter.actions.{868ac3c2-9c45-41a6-b26f-a795ba3fb0e9}manageConfiscationsStatus',
+                            identifier: ri!matterId
+                          ),
+                          a!recordActionItem(
+                            action: 'recordType!{f91c5da0-378b-4e41-81ac-1de4d223b359}CAS Matter.actions.{fcb090c4-b5a6-4a67-9a93-22e698803af8}clonemerge',
+                            identifier: ri!matterId
+                          )
+                        },
+                        style: "MENU",
+                        /*MENU TOOLBAR*/
+                        align: "END",
+                        showWhen: tostring(local!matterAccessType.accessType) = "FULL"
+                      ),
+                      width: "MINIMIZE"
+                    ),
+                    a!sideBySideItem(
+                      item: a!richTextDisplayField(
+                        label: "User Guide Link",
+                        labelPosition: "COLLAPSED",
+                        value: {
+                          a!richTextItem(text: "  "),
+                          a!richTextIcon(
+                            icon: "question-circle",
+                            caption: "MATTERS User Guide",
+                            link: a!safeLink(
+                              uri: local!allLinks[local!activeCollapsibleNavSection],
+                              openLinkIn: "NEW_TAB"
+                            ),
+                            linkStyle: "STANDALONE"
+                          )
+                        },
+                        align: "RIGHT"
+                      ),
+                      width: "MINIMIZE"
                     )
-                  )
-                },
-                align: "START"
-              ),
-              width: "MINIMIZE"
-            ),
-            a!sideBySideItem(
-              item: a!recordActionField_23r3(
-                actions: {
-                  a!recordActionItem(
-                    action: 'recordType!{f91c5da0-378b-4e41-81ac-1de4d223b359}CAS Matter.actions.{9d2bab10-6b56-41fe-ad0b-e50e560a6be8}newEmail',
-                    identifier: ri!matterId
-                  )
-                },
-                align: "END",
-                showWhen: tostring(local!matterAccessType.accessType) = "FULL"
+                  },
+                  showWhen: and(
+                    tostring(local!matterAccessType.accessType) = "FULL",
+                    local!isNotReadOnlyUser
+                  ),
+                  spacing: "DENSE",
+                  marginBelow: "NONE"
+                ),
+                width: "NARROW"
               )
-            ),
-            a!sideBySideItem(
-              item: a!recordActionField_23r3(
-                actions: {
-                  a!recordActionItem(
-                    action: 'recordType!{f91c5da0-378b-4e41-81ac-1de4d223b359}CAS Matter.actions.{e4c9e40b-3ab2-4bb4-b4be-fe5c77132394}editMatterDetails',
-                    identifier: ri!matterId
-                  ),
-                  a!recordActionItem(
-                    action: 'recordType!{f91c5da0-378b-4e41-81ac-1de4d223b359}CAS Matter.actions.{3604f638-bed1-48be-bf2b-2fb4c99f2695}addEvent',
-                    identifier: ri!matterId
-                  ),
-                  a!recordActionItem(
-                    action: 'recordType!{f91c5da0-378b-4e41-81ac-1de4d223b359}CAS Matter.actions.{6274b2b7-01ff-433f-838e-d7b318139913}ABT',
-                    identifier: ri!matterId
-                  ),
-                  if(
-                    contains(
-                      cons!CAS_INT_MANUAL_WEIGHTING_MATTER_STATES,
-                      index(local!case, "statusId", null)
-                    ),
-                    a!recordActionItem(
-                      action: 'recordType!{f91c5da0-378b-4e41-81ac-1de4d223b359}CAS Matter.actions.{37c2b4c3-e827-4c0d-ab22-3d49fa645e45}editWeightingComplexity',
-                      identifier: ri!matterId
-                    ),
-                    {}
-                  ),
-                  a!recordActionItem(
-                    action: 'recordType!{f91c5da0-378b-4e41-81ac-1de4d223b359}CAS Matter.actions.{c837ec83-9669-4911-a3f3-7e9dcba22bc2}abcTime',
-                    identifier: ri!matterId
-                  ),
-                  a!recordActionItem(
-                    action: 'recordType!{f91c5da0-378b-4e41-81ac-1de4d223b359}CAS Matter.actions.{29002607-8976-4e6f-a6fc-3a949bf0251d}allocatePractice',
-                    identifier: ri!matterId
-                  ),
-                  a!recordActionItem(
-                    action: 'recordType!{f91c5da0-378b-4e41-81ac-1de4d223b359}CAS Matter.actions.{b00d6729-3437-4fe6-be0c-92ec4077e5c7}addNote',
-                    identifier: ri!matterId
-                  ),
-                  a!recordActionItem(
-                    action: 'recordType!{f91c5da0-378b-4e41-81ac-1de4d223b359}CAS Matter.actions.{491bbb44-4a7d-4e4f-b883-53d4ba780f5c}jMatch',
-                    identifier: ri!matterId
-                  ),
-                  a!recordActionItem(
-                    action: 'recordType!{f91c5da0-378b-4e41-81ac-1de4d223b359}CAS Matter.actions.{56c26c19-28fe-4350-9c1e-9a99ec19242c}unexpectedWorkload',
-                    identifier: ri!matterId
-                  ),
-                  a!recordActionItem(
-                    action: 'recordType!{f91c5da0-378b-4e41-81ac-1de4d223b359}CAS Matter.actions.{868ac3c2-9c45-41a6-b26f-a795ba3fb0e9}manageConfiscationsStatus',
-                    identifier: ri!matterId
-                  ),
-                  a!recordActionItem(
-                    action: 'recordType!{f91c5da0-378b-4e41-81ac-1de4d223b359}CAS Matter.actions.{fcb090c4-b5a6-4a67-9a93-22e698803af8}clonemerge',
-                    identifier: ri!matterId
-                  )
-                },
-                style: "MENU",
-                /*MENU TOOLBAR*/
-                align: "END",
-                showWhen: tostring(local!matterAccessType.accessType) = "FULL"
-              ),
-              width: "MINIMIZE"
-            ),
-            a!sideBySideItem(
-              item: a!richTextDisplayField(
-                label: "User Guide Link",
-                labelPosition: "COLLAPSED",
-                value: {
-                  a!richTextItem(text: "  "),
-                  a!richTextIcon(
-                    icon: "question-circle",
-                    caption: "MATTERS User Guide",
-                    link: a!safeLink(
-                      uri: local!allLinks[local!activeCollapsibleNavSection],
-                      openLinkIn: "NEW_TAB"
-                    ),
-                    linkStyle: "STANDALONE"
-                  )
-                },
-                align: "RIGHT"
-              ),
-              width: "MINIMIZE"
-            )
-          },
-          showWhen: and(
-            tostring(local!matterAccessType.accessType) = "FULL",
-            local!isNotReadOnlyUser
+            }
           ),
-          spacing: "DENSE",
-          marginBelow: "NONE"
-        ),
+          /*If isShowPortalButtons is FALSE, show buttons to only APPIAN_DS_PILOT*/
+          a!columnsLayout(
+            columns: {
+              a!columnLayout(
+                contents: a!cardLayout(
+                  contents: a!columnsLayout(
+                    columns: {
+                      /*DES*/
+                      a!columnLayout(
+                        contents: {
+                          a!cardLayout(
+                            contents: a!richTextDisplayField(
+                              labelPosition: "COLLAPSED",
+                              value: {
+                                a!richTextIcon(
+                                  icon: "globe-alt",
+                                  color: cons!CAS_COLOUR_APPIAN[3],
+                                  size: "STANDARD"
+                                ),
+                                a!richTextItem(
+                                  text: " DES Portal",
+                                  color: cons!CAS_COLOUR_APPIAN[3],
+                                  size: "SMALL"
+                                )
+                              }
+                            ),
+                            link: a!safeLink(
+                              label: "DES Portal",
+                              uri: concat(
+                                cons!CAS_DES_PORTAL_URL,
+                                local!matter.matterNumber
+                              ),
+
+                            ),
+                            tooltip: "Navigates to the DES Portal",
+                            shape: "SEMI_ROUNDED",
+                            padding: "EVEN_LESS"
+                          )
+                        },
+                        width: ""
+                      ),
+                      /*Sharepoint*/
+                      a!columnLayout(
+                        contents: {
+                          a!cardLayout(
+                            contents: a!richTextDisplayField(
+                              labelPosition: "COLLAPSED",
+                              value: {
+                                a!richTextIcon(
+                                  icon: "link",
+                                  color: cons!CAS_COLOUR_APPIAN[3],
+                                  size: "STANDARD"
+                                ),
+                                a!richTextItem(
+                                  text: " Sharepoint",
+                                  color: cons!CAS_COLOUR_APPIAN[3],
+                                  size: "SMALL"
+                                )
+                              }
+                            ),
+                            link: a!safeLink(
+                              label: "Sharepoint",
+                              uri: concat(
+                                cons!CAS_MATTER_USER_GUIDE_LINKS[15],
+                                local!matter.matterNumber
+                              )
+                            ),
+                            tooltip: "Navigates to the Sharepoint page",
+                            shape: "SEMI_ROUNDED",
+                            padding: "EVEN_LESS"
+                          )
+                        },
+                        width: ""
+                      ),
+                      /*BSP*/
+                      a!columnLayout(
+                        contents: {
+                          a!cardLayout(
+                            contents: a!richTextDisplayField(
+                              labelPosition: "COLLAPSED",
+                              value: {
+                                a!richTextIcon(
+                                  icon: "globe",
+                                  color: cons!CAS_COLOUR_APPIAN[3],
+                                  size: "STANDARD"
+                                ),
+                                a!richTextItem(
+                                  text: " BSP",
+                                  color: cons!CAS_COLOUR_APPIAN[3],
+                                  size: "SMALL"
+                                )
+                              }
+                            ),
+                            link: a!safeLink(
+                              label: "BSP",
+                              uri: cons!CAS_BSP_PORTAL_URL
+                            ),
+                            tooltip: "Navigates to BSP",
+                            shape: "SEMI_ROUNDED",
+                            padding: "EVEN_LESS"
+                          )
+                        },
+                        width: ""
+                      )
+                    },
+                    spacing: "DENSE"
+                  ),
+                  style: cons!CAS_EXTERNAL_PORTAL_BUTTON_BACKGROUND_COLOR,
+                  showBorder: false,
+                  shape: "SEMI_ROUNDED",
+                  padding: "EVEN_LESS"
+                ),
+                showWhen: a!isUserMemberOfGroup(
+                  local!loggedInUser,
+                  cons!CAS_GRP_APPIAN_DES_PILOT
+                )
+              ),
+              a!columnLayout(
+                contents: {}, 
+                width: "2X"
+              ),
+              /*Existing Logic*/
+              a!columnLayout(
+                contents: a!sideBySideLayout(
+                  items: {
+                    a!sideBySideItem(
+                      item: a!buttonArrayLayout(
+                        buttons: {
+                          a!buttonWidget_23r3(
+                            label: "Mark as read",
+                            saveInto: a!writeToDataStoreEntity(
+                              dataStoreEntity: cons!CAS_DSE_MATTER,
+                              valueToStore: a!update(
+                                data: local!matter,
+                                index: "isWasReferralNew",
+                                value: null
+                              ),
+                              onSuccess: {
+                                a!save(
+                                  local!matter,
+                                  rule!CAS_getMatterByParams(matterId: ri!matterId)
+                                )
+                              }
+                            ),
+                            showWhen: and(
+                              a!isNotNullOrEmpty(local!matter.isWasReferralNew),
+                              local!matter.isWasReferralNew = true(),
+                              ri!openedFromReferral = true(),
+                              local!isNotReadOnlyUser
+                            ),
+                            icon: "book-reader"
+                          )
+                        },
+                        align: "START"
+                      ),
+                      width: "MINIMIZE"
+                    ),
+                    a!sideBySideItem(
+                      item: a!recordActionField_23r3(
+                        actions: {
+                          a!recordActionItem(
+                            action: 'recordType!{f91c5da0-378b-4e41-81ac-1de4d223b359}CAS Matter.actions.{9d2bab10-6b56-41fe-ad0b-e50e560a6be8}newEmail',
+                            identifier: ri!matterId
+                          )
+                        },
+                        align: "END",
+                        showWhen: tostring(local!matterAccessType.accessType) = "FULL"
+                      )
+                    ),
+                    a!sideBySideItem(
+                      item: a!recordActionField_23r3(
+                        actions: {
+                          a!recordActionItem(
+                            action: 'recordType!{f91c5da0-378b-4e41-81ac-1de4d223b359}CAS Matter.actions.{e4c9e40b-3ab2-4bb4-b4be-fe5c77132394}editMatterDetails',
+                            identifier: ri!matterId
+                          ),
+                          a!recordActionItem(
+                            action: 'recordType!{f91c5da0-378b-4e41-81ac-1de4d223b359}CAS Matter.actions.{3604f638-bed1-48be-bf2b-2fb4c99f2695}addEvent',
+                            identifier: ri!matterId
+                          ),
+                          a!recordActionItem(
+                            action: 'recordType!{f91c5da0-378b-4e41-81ac-1de4d223b359}CAS Matter.actions.{6274b2b7-01ff-433f-838e-d7b318139913}ABT',
+                            identifier: ri!matterId
+                          ),
+                          if(
+                            contains(
+                              cons!CAS_INT_MANUAL_WEIGHTING_MATTER_STATES,
+                              index(local!case, "statusId", null)
+                            ),
+                            a!recordActionItem(
+                              action: 'recordType!{f91c5da0-378b-4e41-81ac-1de4d223b359}CAS Matter.actions.{37c2b4c3-e827-4c0d-ab22-3d49fa645e45}editWeightingComplexity',
+                              identifier: ri!matterId
+                            ),
+                            {}
+                          ),
+                          a!recordActionItem(
+                            action: 'recordType!{f91c5da0-378b-4e41-81ac-1de4d223b359}CAS Matter.actions.{c837ec83-9669-4911-a3f3-7e9dcba22bc2}abcTime',
+                            identifier: ri!matterId
+                          ),
+                          a!recordActionItem(
+                            action: 'recordType!{f91c5da0-378b-4e41-81ac-1de4d223b359}CAS Matter.actions.{29002607-8976-4e6f-a6fc-3a949bf0251d}allocatePractice',
+                            identifier: ri!matterId
+                          ),
+                          a!recordActionItem(
+                            action: 'recordType!{f91c5da0-378b-4e41-81ac-1de4d223b359}CAS Matter.actions.{b00d6729-3437-4fe6-be0c-92ec4077e5c7}addNote',
+                            identifier: ri!matterId
+                          ),
+                          a!recordActionItem(
+                            action: 'recordType!{f91c5da0-378b-4e41-81ac-1de4d223b359}CAS Matter.actions.{491bbb44-4a7d-4e4f-b883-53d4ba780f5c}jMatch',
+                            identifier: ri!matterId
+                          ),
+                          a!recordActionItem(
+                            action: 'recordType!{f91c5da0-378b-4e41-81ac-1de4d223b359}CAS Matter.actions.{56c26c19-28fe-4350-9c1e-9a99ec19242c}unexpectedWorkload',
+                            identifier: ri!matterId
+                          ),
+                          a!recordActionItem(
+                            action: 'recordType!{f91c5da0-378b-4e41-81ac-1de4d223b359}CAS Matter.actions.{868ac3c2-9c45-41a6-b26f-a795ba3fb0e9}manageConfiscationsStatus',
+                            identifier: ri!matterId
+                          ),
+                          a!recordActionItem(
+                            action: 'recordType!{f91c5da0-378b-4e41-81ac-1de4d223b359}CAS Matter.actions.{fcb090c4-b5a6-4a67-9a93-22e698803af8}clonemerge',
+                            identifier: ri!matterId
+                          )
+                        },
+                        style: "MENU",
+                        /*MENU TOOLBAR*/
+                        align: "END",
+                        showWhen: tostring(local!matterAccessType.accessType) = "FULL"
+                      ),
+                      width: "MINIMIZE"
+                    ),
+                    a!sideBySideItem(
+                      item: a!richTextDisplayField(
+                        label: "User Guide Link",
+                        labelPosition: "COLLAPSED",
+                        value: {
+                          a!richTextItem(text: "  "),
+                          a!richTextIcon(
+                            icon: "question-circle",
+                            caption: "MATTERS User Guide",
+                            link: a!safeLink(
+                              uri: local!allLinks[local!activeCollapsibleNavSection],
+                              openLinkIn: "NEW_TAB"
+                            ),
+                            linkStyle: "STANDALONE"
+                          )
+                        },
+                        align: "RIGHT"
+                      ),
+                      width: "MINIMIZE"
+                    )
+                  },
+                  showWhen: and(
+                    tostring(local!matterAccessType.accessType) = "FULL",
+                    local!isNotReadOnlyUser
+                  ),
+                  spacing: "DENSE",
+                  marginBelow: "NONE"
+                ),
+                width: "NARROW"
+              )
+            }
+          )
+        ),                        
         if(
           or(
             tostring(local!matterAccessType.accessType) = "READ",
@@ -455,7 +842,7 @@ a!localVariables(
     ),
     isHeaderFixed: true,
     contents: {
-      {
+      {         
         if(
           tostring(local!matterAccessType.accessType) = "BLOCKED",
           rule!CAS_ucMatterAccessBlockedMessageScreen(
@@ -543,8 +930,8 @@ a!localVariables(
                             value: {
                               a!richTextItem(
                                 text: { fv!item },
-                                style: "STRONG",
-                                size: "MEDIUM"
+                                size: "MEDIUM",
+                                style: "STRONG"
                               ),
                               " "
                             }
@@ -773,7 +1160,6 @@ a!localVariables(
                                       },
                                       false
                                     )
-                                 
                                   }
                                 )
                               ),
@@ -935,8 +1321,8 @@ a!localVariables(
                           refreshCounter: local!refreshCounter,
                           caseId: ri!caseId,
                           matterAccessType: local!matterAccessType.accessType,
-                          rcktCase: local!case,
-                          matter: local!matter
+                          matter: local!matter,
+                          rcktCase: local!case
                         )
                       ),
                       /*Tasks : 11               */
